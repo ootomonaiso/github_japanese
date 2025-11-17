@@ -18,7 +18,8 @@ class TranslationDictionary {
         throw new Error(`Failed to fetch translations: ${response.status}`);
       }
       const translations = await response.json();
-      this.entries = Object.entries(translations).map(([source, target]) => ({
+      const sortedEntries = Object.entries(translations).sort((a, b) => b[0].length - a[0].length);
+      this.entries = sortedEntries.map(([source, target]) => ({
         source,
         target,
         pattern: new RegExp(`\\b${TranslationDictionary.escapeRegExp(source)}\\b`, "gi")
@@ -261,7 +262,7 @@ class GitHubHelperPanel {
     if (this.mutationObserver) this.mutationObserver.disconnect();
     this.mutationObserver = new MutationObserver(() => this.renderIfNeeded());
     if (document.body) {
-      this.mutationObserver.observe(document.body, { childList: true });
+      this.mutationObserver.observe(document.body, { childList: true, subtree: true });
     }
   }
 
@@ -290,7 +291,7 @@ class GitHubHelperPanel {
   }
 
   mountPanel() {
-    const target = document.querySelector(".application-main") || document.querySelector("main") || document.body;
+    const target = this.getHostElement();
     if (!target) return;
     const panel = document.createElement("section");
     panel.id = this.panelId;
@@ -299,6 +300,23 @@ class GitHubHelperPanel {
     panel.setAttribute(TRANSLATED_ATTR, "true");
     panel.innerHTML = this.composeContent();
     target.prepend(panel);
+  }
+
+  getHostElement() {
+    const selectors = [
+      ".application-main .Layout .Layout-main",
+      ".application-main .flex-auto",
+      ".application-main .js-feed-container",
+      "main .Layout-main",
+      "main .flex-auto"
+    ];
+
+    for (const selector of selectors) {
+      const element = document.querySelector(selector);
+      if (element) return element;
+    }
+
+    return document.querySelector(".application-main") || document.querySelector("main") || document.body;
   }
 
   composeContent() {
@@ -380,6 +398,8 @@ class GitHubHelperPanel {
         margin-bottom: 1.25rem;
         background: rgba(46, 160, 67, 0.08);
         color: inherit;
+        width: 100%;
+        box-sizing: border-box;
       }
 
       .ghjp-helper__header {
@@ -482,8 +502,8 @@ class GitHubHelperPanel {
 
       @media (prefers-color-scheme: dark) {
         #${this.panelId} {
-          background: rgba(46, 160, 67, 0.15);
-          border-color: rgba(110, 118, 129, 0.6);
+          background: rgba(20, 83, 45, 0.9);
+          border-color: rgba(80, 200, 120, 0.35);
         }
 
         .ghjp-helper__card {
