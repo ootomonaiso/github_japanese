@@ -24,6 +24,15 @@
     "https://github.com/*",
     "https://gist.github.com/*"
   ],
+  "web_accessible_resources": [
+    {
+      "resources": ["translations.json"],
+      "matches": [
+        "https://github.com/*",
+        "https://gist.github.com/*"
+      ]
+    }
+  ],
   "content_scripts": [
     {
       "matches": [
