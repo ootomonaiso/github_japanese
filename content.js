@@ -4,18 +4,28 @@ const TRANSLATED_ATTR = "data-ghjp-translated";
 class TranslationDictionary {
   constructor() {
     this.entries = [];
+    this.loading = null;
   }
 
   async load() {
     if (this.entries.length > 0) return;
-    const url = chrome.runtime.getURL("translations.json");
-    const response = await fetch(url);
-    const translations = await response.json();
-    this.entries = Object.entries(translations).map(([source, target]) => ({
-      source,
-      target,
-      pattern: new RegExp(`\\b${TranslationDictionary.escapeRegExp(source)}\\b`, "gi")
-    }));
+    if (this.loading) return this.loading;
+
+    this.loading = (async () => {
+      const url = chrome.runtime.getURL("translations.json");
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch translations: ${response.status}`);
+      }
+      const translations = await response.json();
+      this.entries = Object.entries(translations).map(([source, target]) => ({
+        source,
+        target,
+        pattern: new RegExp(`\\b${TranslationDictionary.escapeRegExp(source)}\\b`, "gi")
+      }));
+    })();
+
+    return this.loading;
   }
 
   translate(text) {
