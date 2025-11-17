@@ -1,0 +1,42 @@
+# GitHub Japanese Translator
+
+GitHubの英語UIをリアルタイムに日本語へ置き換えるChrome拡張機能です。初心者にもやさしい大きなトグルスイッチと説明付きのポップアップで、翻訳のON/OFFやワンクリック翻訳を迷わず操作できます。
+
+## 主な機能
+- GitHub / Gist 全体をMutationObserverで監視し、追加要素も即座に翻訳
+- 翻訳辞書（`translations.json`）でよく使うUIテキストを自然な日本語に置換
+- aria-label / title / placeholder / value属性も対応
+- ポップアップから翻訳ON/OFF、ページ単位の再翻訳、ヘルプ表示が可能
+- 初回起動時にウェルカムメッセージを表示し、設定をChrome Storageに保存
+
+## セットアップ手順
+1. このリポジトリをクローンまたはダウンロードして展開します。
+2. Chromeで `chrome://extensions` を開き、右上の「デベロッパーモード」をONにします。
+3. 「パッケージ化されていない拡張機能を読み込む」 > このフォルダを選択します。
+4. GitHubを開くと自動的に日本語化が始まります。ポップアップから状態を切り替えられます。
+
+## 使い方
+- **日本語モード**: ポップアップ上部のトグルが緑なら翻訳中、灰色なら停止中です。
+- **このページを翻訳**: 動的に読み込まれたPRやIssueコメントを強制的に翻訳したいときに押します。
+- **ヘルプ**: フッターの「使い方を見る」ボタンで簡単なガイドを再表示できます。
+- **初回チュートリアル**: 最初の一度だけ注意点と操作手順をカード表示します。
+
+## iconsの再生成
+`generate-icons.ps1` をPowerShellで実行すると16/48/128pxのPNGが再生成されます。
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\generate-icons.ps1
+```
+
+## 開発メモ
+- 翻訳状態は `ghjp_translation_enabled` キーで `chrome.storage.local` に保存
+- ポップアップとcontent scriptは `GHJP_*` メッセージで通信
+- 既に翻訳済みのテキストには `data-ghjp-translated` を付与し、OFF時は元の文字列へ戻します
+
+## 今後の改善アイデア
+- 翻訳辞書の自動アップデート
+- i18n APIとの連携やユーザー辞書の追加
+- スクリーンショット付きドキュメント
+
+## ライセンス
+MIT License
