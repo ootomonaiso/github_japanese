@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub日本語モード</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="popup__header">
+        <div>
+          <p class="popup__eyebrow">GitHubページ翻訳</p>
+          <h1>日本語モード</h1>
+        </div>
+        <span class="status__dot" aria-hidden="true"></span>
+      </header>
+
+      <section id="welcome" class="card card--info" hidden>
+        <h2>はじめまして！</h2>
+        <p>GitHubの英語UIをやさしい日本語に置き換えます。困ったら下のボタンからいつでも翻訳をやり直せます。</p>
+      </section>
+
+      <section class="card card--toggle">
+        <div class="card__text">
+          <h2>翻訳トグル</h2>
+          <p>GitHub全体を自動的に翻訳します。色で状態がわかります。</p>
+        </div>
+        <label class="toggle" aria-label="翻訳のON/OFF">
+          <input type="checkbox" id="toggle" />
+          <span class="toggle__track">
+            <span class="toggle__thumb" aria-hidden="true"></span>
+          </span>
+          <span id="toggleLabel" class="toggle__label">停止中</span>
+        </label>
+      </section>
+
+      <section class="card">
+        <div class="card__text">
+          <h2>このページだけ翻訳</h2>
+          <p>今見ている画面をすぐに日本語化します。英語のまま戻したい時は上のトグルをOFFにしてください。</p>
+        </div>
+        <button id="translatePage" class="button button--primary">
+          <span>このページを翻訳</span>
+        </button>
+      </section>
+
+      <footer class="popup__footer">
+        <p id="statusMessage">GitHubにアクセス中か確認しています…</p>
+        <button id="helpButton" class="button button--ghost">使い方を見る</button>
+      </footer>
+    </main>
+
+    <dialog id="helpDialog">
+      <h2>使い方</h2>
+      <ol>
+        <li>トグルをオンにするとGitHub全体を日本語表示にします。</li>
+        <li>オフにすると元の英語表示に戻せます。</li>
+        <li>翻訳が追いつかない時は「このページを翻訳」を押してください。</li>
+      </ol>
+      <button id="closeHelp" class="button button--primary">閉じる</button>
+    </dialog>
+
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,223 @@
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --bg-muted: #f6f8fa;
+  --text: #1f2328;
+  --text-muted: #57606a;
+  --border: #d0d7de;
+  --brand: #2ea043;
+  --brand-dark: #1f883d;
+  --danger: #f85149;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --bg-muted: #161b22;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --border: #30363d;
+    --brand: #3fb950;
+    --brand-dark: #2ea043;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Hiragino Sans", "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-width: 320px;
+}
+
+body.is-disabled {
+  opacity: 0.75;
+}
+
+.popup {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.popup__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.popup__eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.popup__header h1 {
+  margin: 0.15rem 0 0;
+  font-size: 1.35rem;
+}
+
+.status__dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 2px var(--border);
+  background: var(--text-muted);
+}
+
+.status__dot[data-state="on"] {
+  background: var(--brand);
+}
+
+.status__dot[data-state="off"] {
+  background: var(--text-muted);
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  background: var(--bg-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.card--info {
+  border-color: #afb8c1;
+  background: rgba(46, 160, 67, 0.1);
+}
+
+.card--toggle {
+  background: linear-gradient(135deg, var(--bg-muted), rgba(63, 185, 80, 0.08));
+}
+
+.card__text h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.card__text p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toggle input {
+  position: absolute;
+  opacity: 0;
+}
+
+.toggle__track {
+  width: 56px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--border);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.toggle__thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.25);
+  transform: translateX(0);
+  transition: transform 0.2s ease;
+}
+
+.toggle input:checked + .toggle__track {
+  background: var(--brand);
+}
+
+.toggle input:checked + .toggle__track .toggle__thumb {
+  transform: translateX(24px);
+}
+
+.toggle__label {
+  min-width: 3.5rem;
+  text-align: right;
+}
+
+.button {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button--primary {
+  background: var(--brand);
+  border-color: var(--brand-dark);
+  color: #fff;
+  box-shadow: 0 8px 16px rgba(46, 160, 67, 0.2);
+}
+
+.button--primary:active {
+  transform: translateY(1px);
+}
+
+.button--ghost {
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+.popup__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+#helpDialog {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#helpDialog::backdrop {
+  background: rgba(3, 13, 23, 0.45);
+}
+
+#helpDialog h2 {
+  margin-top: 0;
+}
+
+#helpDialog ol {
+  padding-left: 1.25rem;
+  color: var(--text-muted);
+}
