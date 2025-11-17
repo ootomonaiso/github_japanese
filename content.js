@@ -136,7 +136,7 @@ class GitHubTranslator {
     }
 
     if (root.querySelectorAll) {
-      const elements = root.querySelectorAll("*[aria-label], *[title], *[placeholder]");
+      const elements = root.querySelectorAll("*[aria-label], *[title], *[placeholder], *[value]");
       elements.forEach((el) => {
         this.attributeTargets.forEach((attr) => this.translateAttribute(el, attr, force));
       });
@@ -151,8 +151,6 @@ class GitHubTranslator {
 
     if (node.nodeType !== Node.ELEMENT_NODE) return;
 
-    if (!force && node.hasAttribute && node.hasAttribute(TRANSLATED_ATTR)) return;
-
     this.attributeTargets.forEach((attr) => this.translateAttribute(node, attr, force));
 
     node.childNodes.forEach((child) => this.translateNode(child, force));
@@ -161,7 +159,7 @@ class GitHubTranslator {
   translateTextNode(node, force = false) {
     const parent = node.parentElement;
     if (!parent) return;
-    if (!force && parent.hasAttribute(TRANSLATED_ATTR)) return;
+    if (!force && node[this.textOriginalKey]) return;
 
     const original = node.textContent;
     const translated = this.dictionary.translate(original);
@@ -179,11 +177,11 @@ class GitHubTranslator {
     if (!element || !element.getAttribute) return;
     const current = element.getAttribute(attribute);
     if (!current) return;
-    if (!force && element.hasAttribute(TRANSLATED_ATTR)) return;
+    const originalAttr = `data-ghjp-original-${attribute}`;
+    if (!force && element.hasAttribute(originalAttr)) return;
 
     const translated = this.dictionary.translate(current);
     if (translated !== current) {
-      const originalAttr = `data-ghjp-original-${attribute}`;
       if (!element.hasAttribute(originalAttr)) {
         element.setAttribute(originalAttr, current);
       }
