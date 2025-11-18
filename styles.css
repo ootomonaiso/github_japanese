@@ -102,6 +102,19 @@ body.is-disabled {
   background: linear-gradient(135deg, var(--bg-muted), rgba(63, 185, 80, 0.08));
 }
 
+.card--dev {
+  border: 1px dashed var(--border);
+  background: rgba(248, 81, 73, 0.05);
+}
+
+.card--dev code {
+  background: var(--bg-muted);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
 .card__text h2 {
   margin: 0 0 0.25rem;
   font-size: 1rem;
@@ -152,7 +165,21 @@ body.is-disabled {
 }
 
 .toggle input:checked + .toggle__track .toggle__thumb {
-  transform: translateX(24px);
+  transform: translateX(28px);
+}
+
+.toggle--small .toggle__track {
+  width: 42px;
+  height: 22px;
+}
+
+.toggle--small .toggle__thumb {
+  width: 16px;
+  height: 16px;
+}
+
+.toggle--small input:checked + .toggle__track .toggle__thumb {
+  transform: translateX(20px);
 }
 
 .toggle__label {

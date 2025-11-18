@@ -131,6 +131,11 @@ async function syncWithContentScript() {
       chrome.storage.local.set({ [STORAGE_KEY]: response.enabled });
       updateToggleView();
     }
+    if (typeof response?.devMode === "boolean") {
+      devModeToggle.checked = response.devMode;
+      chrome.storage.local.set({ [DEV_MODE_KEY]: response.devMode });
+      updateDevModeView();
+    }
   } catch (_error) {
     statusMessage.textContent = "翻訳スクリプトと通信できません。ページ更新後にお試しください。";
   }
@@ -141,6 +146,11 @@ function updateToggleView() {
   toggleLabel.textContent = enabled ? "翻訳中" : "停止中";
   statusDot.dataset.state = enabled ? "on" : "off";
   translateButton.classList.toggle("button--primary", enabled);
+}
+
+function updateDevModeView() {
+  const enabled = devModeToggle.checked;
+  devModeLabel.textContent = enabled ? "ON" : "OFF";
 }
 
 function sendMessage(payload) {
