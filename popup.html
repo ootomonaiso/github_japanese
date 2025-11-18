@@ -45,6 +45,20 @@
         </button>
       </section>
 
+      <section class="card card--dev">
+        <div class="card__text">
+          <h2>🔧 開発モード</h2>
+          <p>未翻訳の英語テキストを自動収集します。コンソールで <code>ghjpDevTools</code> が使えます。</p>
+        </div>
+        <label class="toggle toggle--small" aria-label="開発モードのON/OFF">
+          <input type="checkbox" id="devModeToggle" />
+          <span class="toggle__track">
+            <span class="toggle__thumb" aria-hidden="true"></span>
+          </span>
+          <span id="devModeLabel" class="toggle__label">OFF</span>
+        </label>
+      </section>
+
       <footer class="popup__footer">
         <p id="statusMessage">GitHubにアクセス中か確認しています…</p>
         <button id="helpButton" class="button button--ghost">使い方を見る</button>

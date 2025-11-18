@@ -1,5 +1,6 @@
 const STORAGE_KEY = "ghjp_translation_enabled";
 const FIRST_RUN_KEY = "ghjp_first_run_complete";
+const DEV_MODE_KEY = "ghjp_dev_mode";
 
 const toggle = document.getElementById("toggle");
 const toggleLabel = document.getElementById("toggleLabel");
@@ -10,6 +11,8 @@ const welcomeCard = document.getElementById("welcome");
 const helpButton = document.getElementById("helpButton");
 const helpDialog = document.getElementById("helpDialog");
 const closeHelpButton = document.getElementById("closeHelp");
+const devModeToggle = document.getElementById("devModeToggle");
+const devModeLabel = document.getElementById("devModeLabel");
 
 let currentTabId = null;
 let isGitHubTab = false;
@@ -23,11 +26,14 @@ async function init() {
 async function loadState() {
   const stored = await chrome.storage.local.get({
     [STORAGE_KEY]: true,
-    [FIRST_RUN_KEY]: false
+    [FIRST_RUN_KEY]: false,
+    [DEV_MODE_KEY]: false
   });
 
   toggle.checked = Boolean(stored[STORAGE_KEY]);
+  devModeToggle.checked = Boolean(stored[DEV_MODE_KEY]);
   updateToggleView();
+  updateDevModeView();
 
   if (!stored[FIRST_RUN_KEY]) {
     welcomeCard.hidden = false;
@@ -98,6 +104,23 @@ function registerEvents() {
 
   helpButton.addEventListener("click", () => helpDialog.showModal());
   closeHelpButton.addEventListener("click", () => helpDialog.close());
+
+  devModeToggle.addEventListener("change", async () => {
+    updateDevModeView();
+    if (!isGitHubTab || currentTabId === null) return;
+
+    chrome.storage.local.set({ [DEV_MODE_KEY]: devModeToggle.checked });
+    try {
+      await sendMessage({ type: "GHJP_TOGGLE_DEV_MODE", enabled: devModeToggle.checked });
+      if (devModeToggle.checked) {
+        statusMessage.textContent = "開発モード有効。コンソールで ghjpDevTools を使えます。";
+      } else {
+        statusMessage.textContent = "開発モード無効。";
+      }
+    } catch (error) {
+      statusMessage.textContent = "開発モード切り替えに失敗しました。";
+    }
+  });
 }
 
 async function syncWithContentScript() {

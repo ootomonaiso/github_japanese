@@ -1,5 +1,7 @@
 const STORAGE_KEY = "ghjp_translation_enabled";
 const TRANSLATED_ATTR = "data-ghjp-translated";
+const DEV_MODE_KEY = "ghjp_dev_mode";
+const UNTRANSLATED_ATTR = "data-ghjp-untranslated";
 
 class TranslationDictionary {
   constructor() {
@@ -125,6 +127,8 @@ class TranslationProfileManager {
 class GitHubTranslator {
   constructor() {
     this.enabled = true;
+    this.devMode = false;
+    this.untranslatedTexts = new Set();
     this.dictionary = new TranslationDictionary();
     this.profileManager = new TranslationProfileManager(this.dictionary);
     this.observer = null;
@@ -135,8 +139,17 @@ class GitHubTranslator {
   async init() {
     await this.dictionary.load();
     await this.profileManager.init();
-    const stored = await chrome.storage.local.get({ [STORAGE_KEY]: true });
+    const stored = await chrome.storage.local.get({ 
+      [STORAGE_KEY]: true,
+      [DEV_MODE_KEY]: false
+    });
     this.enabled = Boolean(stored[STORAGE_KEY]);
+    this.devMode = Boolean(stored[DEV_MODE_KEY]);
+
+    if (this.devMode) {
+      console.log("%c[GHJP Dev Mode] 開発モード有効 - 未翻訳テキストを収集します", "color: #2ea043; font-weight: bold;");
+      this.setupDevTools();
+    }
 
     if (this.enabled) {
       this.translateDocument(document.body);
@@ -154,7 +167,7 @@ class GitHubTranslator {
       }
 
       if (message?.type === "GHJP_REQUEST_STATE") {
-        sendResponse({ enabled: this.enabled });
+        sendResponse({ enabled: this.enabled, devMode: this.devMode });
       }
 
       if (message?.type === "GHJP_TRANSLATE_NOW") {
@@ -162,6 +175,16 @@ class GitHubTranslator {
           this.translateDocument(document.body, true);
         }
         sendResponse({ success: true });
+      }
+
+      if (message?.type === "GHJP_TOGGLE_DEV_MODE") {
+        this.toggleDevMode(Boolean(message.enabled));
+        sendResponse({ success: true, devMode: this.devMode });
+      }
+
+      if (message?.type === "GHJP_EXPORT_UNTRANSLATED") {
+        const result = this.exportUntranslated();
+        sendResponse({ success: true, ...result });
       }
 
       return true;
@@ -251,6 +274,10 @@ class GitHubTranslator {
       }
       node.textContent = translated;
       parent.setAttribute(TRANSLATED_ATTR, "true");
+    } else if (this.devMode && this.isTranslatableText(original)) {
+      // 開発モード: 未翻訳テキストを記録
+      this.recordUntranslated(original, "text");
+      parent.setAttribute(UNTRANSLATED_ATTR, "true");
     }
   }
 
@@ -268,6 +295,10 @@ class GitHubTranslator {
       }
       element.setAttribute(attribute, translated);
       element.setAttribute(TRANSLATED_ATTR, "true");
+    } else if (this.devMode && this.isTranslatableText(current)) {
+      // 開発モード: 未翻訳属性を記録
+      this.recordUntranslated(current, `attribute:${attribute}`);
+      element.setAttribute(UNTRANSLATED_ATTR, "true");
     }
   }
 
@@ -292,6 +323,110 @@ class GitHubTranslator {
       });
       element.removeAttribute(TRANSLATED_ATTR);
     });
+  }
+
+  // 開発モード機能
+  toggleDevMode(enabled) {
+    this.devMode = enabled;
+    chrome.storage.local.set({ [DEV_MODE_KEY]: enabled });
+    
+    if (enabled) {
+      console.log("%c[GHJP Dev Mode] 開発モード有効", "color: #2ea043; font-weight: bold;");
+      this.setupDevTools();
+      // 現在のページを再スキャン
+      this.scanForUntranslated();
+    } else {
+      console.log("%c[GHJP Dev Mode] 開発モード無効", "color: #999;");
+      this.untranslatedTexts.clear();
+      // 未翻訳マーカーを削除
+      document.querySelectorAll(`[${UNTRANSLATED_ATTR}]`).forEach(el => {
+        el.removeAttribute(UNTRANSLATED_ATTR);
+      });
+    }
+  }
+
+  setupDevTools() {
+    // グローバルヘルパー関数を追加
+    window.ghjpDevTools = {
+      showUntranslated: () => {
+        const items = Array.from(this.untranslatedTexts).sort();
+        console.group(`%c未翻訳テキスト一覧 (${items.length}件)`, "color: #2ea043; font-weight: bold;");
+        items.forEach(item => console.log(item));
+        console.groupEnd();
+        return items;
+      },
+      exportJSON: () => {
+        const result = this.exportUntranslated();
+        console.log("%cコピー用JSON:", "color: #2ea043; font-weight: bold;");
+        console.log(result.json);
+        return result.json;
+      },
+      highlightUntranslated: () => {
+        const style = document.getElementById('ghjp-dev-highlight') || document.createElement('style');
+        style.id = 'ghjp-dev-highlight';
+        style.textContent = `
+          [${UNTRANSLATED_ATTR}] {
+            outline: 2px dashed #f85149 !important;
+            outline-offset: 2px;
+          }
+        `;
+        if (!document.getElementById('ghjp-dev-highlight')) {
+          document.head.appendChild(style);
+        }
+        console.log("%c未翻訳要素をハイライト表示しました", "color: #2ea043;");
+      },
+      clear: () => {
+        this.untranslatedTexts.clear();
+        console.log("%c未翻訳リストをクリアしました", "color: #2ea043;");
+      }
+    };
+
+    console.log("%c[GHJP Dev Tools] 使用可能なコマンド:", "color: #2ea043; font-weight: bold;");
+    console.log("  ghjpDevTools.showUntranslated() - 未翻訳テキスト一覧を表示");
+    console.log("  ghjpDevTools.exportJSON() - translations.json用のJSONを出力");
+    console.log("  ghjpDevTools.highlightUntranslated() - 未翻訳要素を赤枠でハイライト");
+    console.log("  ghjpDevTools.clear() - 未翻訳リストをクリア");
+  }
+
+  scanForUntranslated() {
+    console.log("%c[GHJP Dev Mode] ページをスキャン中...", "color: #2ea043;");
+    this.translateDocument(document.body, true);
+    const count = this.untranslatedTexts.size;
+    console.log(`%c[GHJP Dev Mode] ${count}件の未翻訳テキストを検出`, "color: #2ea043; font-weight: bold;");
+  }
+
+  isTranslatableText(text) {
+    if (!text || typeof text !== "string") return false;
+    const trimmed = text.trim();
+    // 翻訳対象: 英語の単語を含み、記号だけではない、短すぎない
+    if (trimmed.length < 2) return false;
+    if (/^[\d\s\.,!?;:()\[\]{}<>\/\\@#$%^&*+=\-_~`'"]+$/.test(trimmed)) return false;
+    if (!/[a-zA-Z]/.test(trimmed)) return false;
+    // URLやコードっぽいものは除外
+    if (/^https?:\/\//.test(trimmed)) return false;
+    if (/^[a-z0-9_\-\.]+\.(com|org|net|io|dev|js|json|html|css|py|md)$/i.test(trimmed)) return false;
+    return true;
+  }
+
+  recordUntranslated(text, context) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const entry = `${trimmed}`;
+    this.untranslatedTexts.add(entry);
+  }
+
+  exportUntranslated() {
+    const items = Array.from(this.untranslatedTexts).sort();
+    const jsonObj = {};
+    items.forEach(item => {
+      jsonObj[item] = `[翻訳] ${item}`;
+    });
+    const json = JSON.stringify(jsonObj, null, 2);
+    return {
+      count: items.length,
+      items,
+      json
+    };
   }
 }
 
