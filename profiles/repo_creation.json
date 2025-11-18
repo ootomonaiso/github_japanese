@@ -1,0 +1,13 @@
+{
+  "Create a new repository": "新しいリポジトリを作成",
+  "A repository contains all project files, including the revision history.": "リポジトリにはプロジェクトのすべてのファイルと変更履歴が含まれます。",
+  "Already have a project repository elsewhere?": "すでに他の場所にプロジェクトのリポジトリがありますか?",
+  "Repository name": "リポジトリ名",
+  "Give your repository a short, memorable name.": "短く覚えやすいリポジトリ名を付けましょう。",
+  "Description": "説明",
+  "Great repository names are short and memorable. Need inspiration? How about": "良いリポジトリ名は短く覚えやすいものです。インスピレーションが必要ですか? 例えば",
+  "Choose a license to determine how others can use your project.": "他の人があなたのプロジェクトをどのように利用できるかを決めるライセンスを選択します。",
+  "A README helps people understand your project. Including one is always a good idea.": "README はプロジェクトの理解を助けます。追加しておくと安心です。",
+  "Add a .gitignore to specify intentionally untracked files.": ".gitignore を追加して追跡しないファイルを指定します。",
+  "Add a license to tell others how they can use this project.": "ライセンスを追加して、他の人がこのプロジェクトをどのように利用できるかを示します。"
+}

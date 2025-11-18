@@ -18,15 +18,24 @@ class TranslationDictionary {
         throw new Error(`Failed to fetch translations: ${response.status}`);
       }
       const translations = await response.json();
-      const sortedEntries = Object.entries(translations).sort((a, b) => b[0].length - a[0].length);
-      this.entries = sortedEntries.map(([source, target]) => ({
-        source,
-        target,
-        pattern: new RegExp(`\\b${TranslationDictionary.escapeRegExp(source)}\\b`, "gi")
-      }));
+      this.addEntries(translations);
     })();
 
     return this.loading;
+  }
+
+  addEntries(translations) {
+    if (!translations) return;
+    const newEntries = Object.entries(translations).map(([source, target]) => ({
+      source,
+      target,
+      pattern: new RegExp(`\\b${TranslationDictionary.escapeRegExp(source)}\\b`, "gi")
+    }));
+
+    const newSources = new Set(newEntries.map((entry) => entry.source));
+    this.entries = this.entries.filter((entry) => !newSources.has(entry.source));
+    this.entries.push(...newEntries);
+    this.entries.sort((a, b) => b.source.length - a.source.length);
   }
 
   translate(text) {
@@ -54,10 +63,70 @@ class TranslationDictionary {
   }
 }
 
+class TranslationProfileManager {
+  constructor(dictionary) {
+    this.dictionary = dictionary;
+    this.loadedProfiles = new Set();
+    this.navigationHooked = false;
+    this.profiles = [
+      {
+        regex: /^\/new$/,
+        file: "profiles/repo_creation.json"
+      }
+    ];
+  }
+
+  async init() {
+    await this.applyForCurrentPath();
+    this.setupNavigationHooks();
+  }
+
+  async applyForCurrentPath() {
+    const path = window.location.pathname;
+    const matchedProfiles = this.profiles.filter((profile) => profile.regex.test(path));
+    for (const profile of matchedProfiles) {
+      if (this.loadedProfiles.has(profile.file)) continue;
+      await this.loadProfile(profile.file);
+      this.loadedProfiles.add(profile.file);
+    }
+  }
+
+  async loadProfile(file) {
+    const url = chrome.runtime.getURL(file);
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.warn(`GHJP: プロファイルの読み込みに失敗しました (${file})`, response.status);
+      return;
+    }
+    const translations = await response.json();
+    this.dictionary.addEntries(translations);
+  }
+
+  setupNavigationHooks() {
+    if (this.navigationHooked) return;
+    this.navigationHooked = true;
+    const rerun = () => this.applyForCurrentPath();
+
+    ["pushState", "replaceState"].forEach((method) => {
+      if (typeof history[method] !== "function") return;
+      const original = history[method];
+      history[method] = function patchedHistoryMethod(...args) {
+        const result = original.apply(this, args);
+        rerun();
+        return result;
+      };
+    });
+
+    window.addEventListener("popstate", rerun);
+    document.addEventListener("turbo:load", rerun);
+  }
+}
+
 class GitHubTranslator {
   constructor() {
     this.enabled = true;
     this.dictionary = new TranslationDictionary();
+    this.profileManager = new TranslationProfileManager(this.dictionary);
     this.observer = null;
     this.attributeTargets = ["aria-label", "title", "placeholder", "value"];
     this.textOriginalKey = "__ghjpOriginalText";
@@ -65,6 +134,7 @@ class GitHubTranslator {
 
   async init() {
     await this.dictionary.load();
+    await this.profileManager.init();
     const stored = await chrome.storage.local.get({ [STORAGE_KEY]: true });
     this.enabled = Boolean(stored[STORAGE_KEY]);
 
